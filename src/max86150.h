@@ -77,7 +77,7 @@ public:
 	void setProximityThreshold(uint8_t threshMSB);
 
 	//Multi-led configuration mode (page 22)
-	void setFIFOSlot(uint8_t slot1 = SLOT_NONE, uint8_t slot2 = SLOT_NONE, uint8_t slot3 = SLOT_NONE, uint8_t slot4 = SLOT_NONE)
+	void setFIFOSlot(uint8_t slot1 = SLOT_NONE, uint8_t slot2 = SLOT_NONE, uint8_t slot3 = SLOT_NONE, uint8_t slot4 = SLOT_NONE);
 	void enableSlot(uint8_t slotNumber, uint8_t device); //Given slot number, assign a device to slot
 	void disableSlots(void);
 
