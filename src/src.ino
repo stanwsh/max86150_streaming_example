@@ -1,13 +1,4 @@
 /*
-  ProtoCentral MAX86150 Breakout Board
-
-  https://github.com/protocentral/protocentral_max86150
-
-  Written by: Ashwin Whitchurch (support@protocentral.com)
-
-  Outputs PPG values from the Red LED.
-
-  Place your finger on the two ECG pads to see your ECG waveform in realtime
 
   Hardware Connections (Breakout
   board to Arduino):
@@ -24,7 +15,6 @@
   4) Make sure the drop down is set to 115200 baud
   5) See your ECG and heartbeat
 
-  This code is released under the [MIT License](http://opensource.org/licenses/MIT).
 */
 
 #include <Wire.h>
@@ -69,7 +59,6 @@ void loop()
         debug.print(ecgsigned16);
         debug.print('\t');
         debug.println(ppgunsigned16);
-        debug.println(MAX86150_INTENABLE2);
         delay(100);
     }
 }

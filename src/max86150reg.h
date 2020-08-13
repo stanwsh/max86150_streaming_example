@@ -1,7 +1,6 @@
 
 // REGISTER MAP ADDRESS
 
-
 // Status Registers
 static const uint8_t MAX86150_INTSTAT1 = 0x00;
 static const uint8_t MAX86150_INTSTAT2 = 0x01;
@@ -57,15 +56,34 @@ static const uint8_t MAX86150_INT_PROX_INT_DISABLE = 0x00;
 // BIT:0 PWR_RDY:Power Ready Flag
 // ?
 
-// PPG Configuration 2 (0x0F)
-// BIT:[2,0] SMP_AVE:Sample Averaging Options
-static const uint8_t MAX86150_SAMPLEAVE_MASK = (byte)~0b11100000; // wrong ? ~0b00000111
-static const uint8_t MAX86150_SAMPLEAVE_1 = 0x00;				  // no averaging
-static const uint8_t MAX86150_SAMPLEAVE_2 = 0x20;
-static const uint8_t MAX86150_SAMPLEAVE_4 = 0x40;
-static const uint8_t MAX86150_SAMPLEAVE_8 = 0x60;
-static const uint8_t MAX86150_SAMPLEAVE_16 = 0x80;
-static const uint8_t MAX86150_SAMPLEAVE_32 = 0xA0;
+// Interrupt Enable 2 (0x03)
+// BIT:7 VDD_OOR_EN:VDD Out-of-range Indicator Enable
+static const uint8_t MAX86150_VDD_OOR_EN_MASK = (byte)~0b10000000;
+static const uint8_t MAX86150_VDD_OOR_EN_ENABLE = 0x80;
+static const uint8_t MAX86150_VDD_OOR_EN_DISABLE = 0x00;
+// BIT:2 ECG_RDY_EN:New ECG FIFO Data Ready Interrupt Enable
+static const uint8_t MAX86150_ECG_RDY_EN_MASK = (byte)~0b00000100;
+static const uint8_t MAX86150_ECG_RDY_EN_ENABLE = 0x04;
+static const uint8_t MAX86150_ECG_RDY_EN_DISABLE = 0x00;
+
+// FIFO Writer Pointer (0x04)
+// BIT:[4,0] FIFO_WR_PTR:FIFO Write Pointer
+// This points to the location where the next sample is written.
+// This pointer advances for each sample pushed on to the FIFO.
+// TODO
+
+// Overflow Counter (0x05)
+// BIT:[4,0] OVF_COUNTER:FIFO Overflow Counter
+// When FIFO is full, any new samples result in new or old samples getting lost depending on
+// FIFO_ROLLS_ON_FULL. OVF_COUNTER counts the number of samples lost. It saturates at 0x1F.
+
+// FIFO Read Pointer (0x06)
+// BIT:[4,0] FIFO_RD_PTR:FIFO Read Pointer
+// The FIFO Read Pointer points to the location from where the processor gets the next sample 
+// from the FIFO tyhrough the I2C interface. This advances each time a sample is popped from the FIFO.
+// The processor can also write to this pointer after reading the samples. This allows rereading (or retrying) samples from the FIFO.
+
+// FIFO Data Register (0x07)
 
 // FIFO Configuration (0x08)
 // BIT:4 FIFO_ROLL_ON_FULL:FIFO Rolls on Full Options
@@ -77,6 +95,19 @@ static const uint8_t MAX86150_ROLLOVER_DISABLE = 0x00;
 // BIT:[3,0] FIFO_A_FULL FIFO Almost Full Value
 // default:17 (0xF)
 static const uint8_t MAX86150_A_FULL_MASK = (byte)~0b00001111; // FIFO almost full
+
+
+// default FIFO Data Time slot setting
+// 4-bit value. LED1[RED] LED2[IR]
+static const uint8_t SLOT_NONE = 0x00;
+static const uint8_t SLOT_LED1 = 0x01;
+static const uint8_t SLOT_LED2 = 0x02;
+static const uint8_t SLOT_LED1_PILOT = 0x09;
+static const uint8_t SLOT_LED2_PILOT = 0x0A;
+static const uint8_t SLOT_ECG = 0x0D;
+// FIFO Data Control Register 1 (0x09)
+
+// FIFO Data Control Register 2 (0x0A)
 
 // System Control (0x0D)
 // BIT:2 FIFO_EN:FIFO enable
@@ -135,11 +166,30 @@ static const uint8_t MAX86150_SLOT2_MASK = 0x0F;
 static const uint8_t MAX86150_SLOT3_MASK = 0xF0;
 static const uint8_t MAX86150_SLOT4_MASK = 0x0F;
 
-static const uint8_t SLOT_NONE = 0x00;
-static const uint8_t SLOT_RED_LED = 0x01;
-static const uint8_t SLOT_IR_LED = 0x02;
-static const uint8_t SLOT_RED_PILOT = 0x09;
-static const uint8_t SLOT_IR_PILOT = 0x0A;
-static const uint8_t SLOT_ECG = 0x0D;
+// PPG Configuration 2 (0x0F)
+// BIT:[2,0] SMP_AVE:Sample Averaging Options
+static const uint8_t MAX86150_SAMPLEAVE_MASK = (byte)~0b11100000; // wrong ? ~0b00000111
+static const uint8_t MAX86150_SAMPLEAVE_1 = 0x00;				  // no averaging
+static const uint8_t MAX86150_SAMPLEAVE_2 = 0x20;
+static const uint8_t MAX86150_SAMPLEAVE_4 = 0x40;
+static const uint8_t MAX86150_SAMPLEAVE_8 = 0x60;
+static const uint8_t MAX86150_SAMPLEAVE_16 = 0x80;
+static const uint8_t MAX86150_SAMPLEAVE_32 = 0xA0;
+
+// Prox Interrupt Threshold (0x10)
+
+// LED1 Pulse Amplitude (0x10) [IR]
+
+// LED2 Pulse Amplitude (0x10) [RED]
+
+// LED Range (0x14)
+
+// LED PILOT Pulse Amplitude (0x15)
+
+// ECG Configuration 1 (0x3C)
+
+// ECG Configuration 3 (0x3E)
+
+
 
 static const uint8_t MAX_30105_EXPECTEDPARTID = 0x1E;

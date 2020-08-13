@@ -167,14 +167,27 @@ void MAX86150::setProximityThreshold(uint8_t threshMSB)
 	writeRegister8(_i2caddr, MAX86150_PROXINTTHRESH, threshMSB);
 }
 
+// options: SLOT_NONE/LED1 2/LED1 2_RGE/ECG
+// default example:
+// example 1 PPG (LED 1) + PPG (LED2) + ECG
+// example 2 PPG (LED 2) + ECG
+// example 3 PPG (LED 1) + PPG (LED2)
+// example 4 ECG
+// example 5 PPG (LED 1)
+void MAX86150::setFIFOSlot(uint8_t slot1, uint8_t slot2, uint8_t slot3, uint8_t slot4)
+{
+	enableSlot(1, slot1);
+	enableSlot(2, slot2);
+	enableSlot(3, slot3);
+	enableSlot(4, slot4);
+}
+
 //Given a slot number assign a thing to it
 //Devices are SLOT_RED_LED or SLOT_RED_PILOT (proximity)
 //Assigning a SLOT_RED_LED will pulse LED
 //Assigning a SLOT_RED_PILOT will ??
 void MAX86150::enableSlot(uint8_t slotNumber, uint8_t device)
 {
-	uint8_t originalContents;
-
 	switch (slotNumber)
 	{
 	case (1):
@@ -304,9 +317,10 @@ void MAX86150::setup(byte powerLevel, byte sampleAverage, byte ledMode, int samp
 
 	//FIFO Control 1 = FD2|FD1, FIFO Control 2 = FD4|FD3
 
-	writeRegister8(_i2caddr, MAX86150_FIFOCONTROL1, (0b00100001)); // FD2:FD1 = PPG_LED2:PPG_LED1
+	setFIFOSlot(SLOT_LED1, SLOT_LED2, SLOT_ECG);
+	// writeRegister8(_i2caddr, MAX86150_FIFOCONTROL1, (0b00100001)); // FD2:FD1 = PPG_LED2:PPG_LED1
 	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL1,(0b00001001));
-	writeRegister8(_i2caddr, MAX86150_FIFOCONTROL2, (0b00001001)); // FD4:FD3 = None:ECG
+	// writeRegister8(_i2caddr, MAX86150_FIFOCONTROL2, (0b00001001)); // FD4:FD3 = None:ECG
 	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL2,(0b00000000));
 	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL1, (char)(FIFOCode & 0x00FF) );
 	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL2, (char)(FIFOCode >>8) );
@@ -319,7 +333,7 @@ void MAX86150::setup(byte powerLevel, byte sampleAverage, byte ledMode, int samp
 
 	writeRegister8(_i2caddr, MAX86150_SYSCONTROL, 0x04); // start FIFO, when shutdown the FIFO_EN will be 0
 
-	writeRegister8(_i2caddr, MAX86150_ECG_CONFIG1, 0b00000011); // ECGXSAMPLERATE:200
+	writeRegister8(_i2caddr, MAX86150_ECG_CONFIG1, 0b00000011); // ECGSAMPLERATE:200
 	writeRegister8(_i2caddr, MAX86150_ECG_CONFIG3, 0b00001101); // ECG_GAIN:8 IA_GAIN:9.5
 
 	setPulseAmplitudeRed(0xFF); // MSB
@@ -411,7 +425,7 @@ void MAX86150::nextSample(void)
 //Polls the sensor for new data
 //Call regularly
 //If new data is available, it updates the head and tail in the main struct
-//Returns number of new samples obtained
+//Returns the number of new samples obtained
 uint16_t MAX86150::check(void)
 {
 	//Read register FIDO_DATA in (3-byte * number of active LED) chunks

@@ -12,6 +12,7 @@
 #pragma once
 
 #include "Arduino.h"
+#include "max86150reg.h"
 
 // #if (ARDUINO >= 100)
 //  #include "Arduino.h"
@@ -76,6 +77,7 @@ public:
 	void setProximityThreshold(uint8_t threshMSB);
 
 	//Multi-led configuration mode (page 22)
+	void setFIFOSlot(uint8_t slot1 = SLOT_NONE, uint8_t slot2 = SLOT_NONE, uint8_t slot3 = SLOT_NONE, uint8_t slot4 = SLOT_NONE)
 	void enableSlot(uint8_t slotNumber, uint8_t device); //Given slot number, assign a device to slot
 	void disableSlots(void);
 
@@ -145,6 +147,8 @@ private:
 
 	void bitMask(uint8_t reg, uint8_t mask, uint8_t thing);
 
+	
+
 #define STORAGE_SIZE 4 //Each long is 4 bytes so limit this to fit on your micro
 
 	typedef struct Record
@@ -154,9 +158,7 @@ private:
 		int32_t ecg[STORAGE_SIZE];
 		byte head;
 		byte tail;
-	}
-
-	sense_struct; //This is our circular buffer of readings from the sensor
+	} sense_struct; //This is our circular buffer of readings from the sensor
 
 	sense_struct sense;
 };
