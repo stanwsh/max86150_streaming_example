@@ -20,19 +20,21 @@ static const uint8_t MAX86150_SYSCONTROL = 0x0D;
 // PPG Configuration
 static const uint8_t MAX86150_PPGCONFIG1 = 0x0E;
 static const uint8_t MAX86150_PPGCONFIG2 = 0x0F;
-static const uint8_t MAX86150_LED_PROX_AMP = 0x10;
+static const uint8_t MAX86150_PROXINTTHRESH = 0x10; // ?
+
 // LED Pulse Amplitude
 static const uint8_t MAX86150_LED1_PULSEAMP = 0x11;
 static const uint8_t MAX86150_LED2_PULSEAMP = 0x12;
 static const uint8_t MAX86150_LED_RANGE = 0x14;
 static const uint8_t MAX86150_LED_PILOT_PA = 0x15;
+// static const uint8_t MAX86150_LED_PROX_AMP = 0x15;
+
 // ECG Configuration
 static const uint8_t MAX86150_ECG_CONFIG1 = 0x3C;
 static const uint8_t MAX86150_ECG_CONFIG3 = 0x3E;
 //  Part ID
 static const uint8_t MAX86150_PARTID = 0xFF;
 
-static const uint8_t MAX86150_PROXINTTHRESH = 0x10; // ?
 
 // REGISTER DETAILS
 
@@ -98,7 +100,7 @@ static const uint8_t MAX86150_A_FULL_MASK = (byte)~0b00001111; // FIFO almost fu
 
 
 // default FIFO Data Time slot setting
-// 4-bit value. LED1[RED] LED2[IR]
+// 4-bit value. LED1[IR] LED2[RED]
 static const uint8_t SLOT_NONE = 0x00;
 static const uint8_t SLOT_LED1 = 0x01;
 static const uint8_t SLOT_LED2 = 0x02;
@@ -167,29 +169,66 @@ static const uint8_t MAX86150_SLOT3_MASK = 0xF0;
 static const uint8_t MAX86150_SLOT4_MASK = 0x0F;
 
 // PPG Configuration 2 (0x0F)
+// BIT:7 ALC_FDM_DIS:Disable ALC+FDM
+static const uint8_t MAX86150_ALC_FDM_DIS_MASK = (byte)~0b10000000;
+static const uint8_t MAX86150_ALC_FDM_DIS_ENABLE = 0x00;
+static const uint8_t MAX86150_ALC_FDM_DIS_DISABLE = 0x80;
+
 // BIT:[2,0] SMP_AVE:Sample Averaging Options
-static const uint8_t MAX86150_SAMPLEAVE_MASK = (byte)~0b11100000; // wrong ? ~0b00000111
+static const uint8_t MAX86150_SAMPLEAVE_MASK = (byte)~0b00000111;
 static const uint8_t MAX86150_SAMPLEAVE_1 = 0x00;				  // no averaging
-static const uint8_t MAX86150_SAMPLEAVE_2 = 0x20;
-static const uint8_t MAX86150_SAMPLEAVE_4 = 0x40;
-static const uint8_t MAX86150_SAMPLEAVE_8 = 0x60;
-static const uint8_t MAX86150_SAMPLEAVE_16 = 0x80;
-static const uint8_t MAX86150_SAMPLEAVE_32 = 0xA0;
+static const uint8_t MAX86150_SAMPLEAVE_2 = 0x01;
+static const uint8_t MAX86150_SAMPLEAVE_4 = 0x02;
+static const uint8_t MAX86150_SAMPLEAVE_8 = 0x03;
+static const uint8_t MAX86150_SAMPLEAVE_16 = 0x04;
+static const uint8_t MAX86150_SAMPLEAVE_32 = 0x05;
 
 // Prox Interrupt Threshold (0x10)
 
 // LED1 Pulse Amplitude (0x10) [IR]
-
 // LED2 Pulse Amplitude (0x10) [RED]
 
 // LED Range (0x14)
+static const uint8_t MAX86150_LED1_RGE_MASK = (byte)~0b00000011;
+static const uint8_t MAX86150_LED2_RGE_MASK = (byte)~0b00001100;
+static const uint8_t MAX86150_LED_RGE_51 = 0x00;
+static const uint8_t MAX86150_LED_RGE_102 = 0x01;
+static const uint8_t MAX86150_LED_RGE_153 = 0x02;
+static const uint8_t MAX86150_LED_RGE_204 = 0x03;
+
 
 // LED PILOT Pulse Amplitude (0x15)
 
 // ECG Configuration 1 (0x3C)
+// BIT:2 ECG_ADC_CLK: ECG ADC Clock
+// BIT:[1,0] ECG_ADC_OSR: ECG ADC Oversampling Ratio
+static const uint8_t MAX86150_ECG_ADC_CLK_MASK = (byte)~0b00000100;
+static const uint8_t MAX86150_ECG_ADC_OSR_MASK = (byte)~0b00000011;
+static const uint8_t MAX86150_ECG_SAMPLERATE_MASK = (byte)~0b00000111;
+static const uint8_t MAX86150_ECG_SR_1600 = 0x00;
+static const uint8_t MAX86150_ECG_SR_800 = 0x01;
+static const uint8_t MAX86150_ECG_SR_400 = 0x02;
+static const uint8_t MAX86150_ECG_SR_200 = 0x03;
+static const uint8_t MAX86150_ECG_SR_3200 = 0x04;
+static const uint8_t MAX86150_ECG_SR2_1600 = 0x05;
+static const uint8_t MAX86150_ECG_SR2_800 = 0x06;
+static const uint8_t MAX86150_ECG_SR2_400 = 0x07;
+
 
 // ECG Configuration 3 (0x3E)
+// BIT:[3,2] PGA_ECG_GAIN: ECG PGA Gain Options
+static const uint8_t MAX86150_ECGGAIN_MASK = (byte)~0b00001100;
+static const uint8_t MAX86150_ECGGAIN_1 = 0x00;
+static const uint8_t MAX86150_ECGGAIN_2 = 0x04;
+static const uint8_t MAX86150_ECGGAIN_4 = 0x08;
+static const uint8_t MAX86150_ECGGAIN_8 = 0x0C;
 
+// BIT:[1,0] IA_GAIN: Instrumentation Amplifier Gain Options
+static const uint8_t MAX86150_IAGAIN_MASK = (byte)~0b00000011;
+static const uint8_t MAX86150_IAGAIN_5 = 0x00;
+static const uint8_t MAX86150_IAGAIN_9_5 = 0x01;
+static const uint8_t MAX86150_IAGAIN_20 = 0x02;
+static const uint8_t MAX86150_IAGAIN_50 = 0x03;
 
 
 static const uint8_t MAX_30105_EXPECTEDPARTID = 0x1E;

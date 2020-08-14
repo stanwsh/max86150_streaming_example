@@ -126,45 +126,84 @@ void MAX86150::setLEDMode(uint8_t mode)
 	bitMask(MAX86150_PPGCONFIG1, MAX86150_MODE_MASK, mode);
 }
 
+// options: MAX86150_PPGADCRANGE_4096/8192/16384/32768 [nA]
 void MAX86150::setPPGADCRange(uint8_t adcRange)
 {
-	// adcRange: one of MAX86150_ADCRANGE_2048, _4096, _8192, _16384
-	//bitMask(MAX86150_PPGCONFIG1, MAX86150_ADCRANGE_MASK, adcRange);
+	bitMask(MAX86150_PPGCONFIG1, MAX86150_PPGADCRANGE_MASK, adcRange);
 }
 
+// options: MAX86150_PPGSR_10/20/50/84/100/200/400/800/1000/1600/3200/10(N=2)/20(N=2)/50(N=2)/84(N=2)/100(N=2)
 void MAX86150::setPPGSampleRate(uint8_t sampleRate)
 {
-	// sampleRate: one of MAX86150_SAMPLERATE_50, _100, _200, _400, _800, _1000, _1600, _3200
-	//bitMask(MAX86150_PARTICLECONFIG, MAX86150_PPGSR_MASK, sampleRate);
+	bitMask(MAX86150_PPGCONFIG1, MAX86150_PPGSR_MASK, sampleRate);
 }
 
-void MAX86150::setPulseWidth(uint8_t pulseWidth)
+// options: MAX86150_PULSEWIDTH_50/100/200/400 [us]
+void MAX86150::setPPGPulseWidth(uint8_t pulseWidth)
 {
-	// pulseWidth: one of MAX86150_PULSEWIDTH_69, _188, _215, _411 (50, 100, 200, 400)
 	bitMask(MAX86150_PPGCONFIG1, MAX86150_PULSEWIDTH_MASK, pulseWidth);
 }
 
-// NOTE: Amplitude values: 0x00 = 0mA, 0x7F = 25.4mA, 0xFF = 50mA (typical)
-// See datasheet, page 21
+// NOTE: Amplitude values: 0x00 = 0mA, 0x7F = 25.4mA, 0xFF = 51mA (when LED2_RGE sets 0b00[50mA])
 void MAX86150::setPulseAmplitudeRed(uint8_t amplitude)
 {
 	writeRegister8(_i2caddr, MAX86150_LED2_PULSEAMP, amplitude);
 }
 
+// NOTE: Amplitude values: 0x00 = 0mA, 0x7F = 25.4mA, 0xFF = 51mA (when LED1_RGE sets 0b00[50mA])
 void MAX86150::setPulseAmplitudeIR(uint8_t amplitude)
 {
 	writeRegister8(_i2caddr, MAX86150_LED1_PULSEAMP, amplitude);
 }
 
+// NOTE: Amplitude values: 0x00 = 0mA, 0x7F = 25.4mA, 0xFF = 51mA (when LED1_RGE sets 0b00[50mA] if LED1 is used in PILOT mode)
 void MAX86150::setPulseAmplitudeProximity(uint8_t amplitude)
 {
-	writeRegister8(_i2caddr, MAX86150_LED_PROX_AMP, amplitude);
+	writeRegister8(_i2caddr, MAX86150_LED_PILOT_PA, amplitude);
 }
 
+// options:
+// led 1:IR, 2:Red
+// range: MAX86150_LED_RGE_51/102/153/204
+void MAX86150::setLEDRange(uint8_t led, uint8_t range)
+{
+	switch (led)
+	{
+	case 1:
+		bitMask(MAX86150_LED_RANGE, MAX86150_LED1_RGE_MASK, range);
+		break;
+	case 2:
+		bitMask(MAX86150_LED_RANGE, MAX86150_LED2_RGE_MASK, range << 2);
+		break;
+	default:
+		break;
+	}
+}
+
+// It sets the IR ADC count that truggers the beginning of the PPG mode specified in the FIFO Data Control Register.
+// 0x01 means an ADC value of 1023(decimal) or higher triggers the PROX interrupt.
 void MAX86150::setProximityThreshold(uint8_t threshMSB)
 {
 	// The threshMSB signifies only the 8 most significant-bits of the ADC count.
 	writeRegister8(_i2caddr, MAX86150_PROXINTTHRESH, threshMSB);
+}
+
+// options: MAX86150_ECG_SR_3200/1600/800/400/200(recommended)
+void MAX86150::setECGSampling(uint8_t sampleRate)
+{
+	bitMask(MAX86150_ECG_CONFIG1 ,MAX86150_ECG_SAMPLERATE_MASK, sampleRate);
+}
+
+// options: MAX86150_ECGGAIN_1/2/4/8
+void MAX86150::setECGGain(uint8_t gain)
+{
+	bitMask(MAX86150_ECG_CONFIG3, MAX86150_ECGGAIN_MASK, gain);
+}
+
+// options: MAX86150_IAGAIN_5/9_5/20/50
+void MAX86150::setIAGain(uint8_t gain)
+{
+	bitMask(MAX86150_ECG_CONFIG3, MAX86150_IAGAIN_MASK, gain);
 }
 
 // options: SLOT_NONE/LED1 2/LED1 2_RGE/ECG
@@ -191,16 +230,16 @@ void MAX86150::enableSlot(uint8_t slotNumber, uint8_t device)
 	switch (slotNumber)
 	{
 	case (1):
-		bitMask(MAX86150_FIFOCONTROL1, MAX86150_SLOT1_MASK, device); // FD2
+		bitMask(MAX86150_FIFOCONTROL1, MAX86150_SLOT1_MASK, device); // FD1
 		break;
 	case (2):
-		bitMask(MAX86150_FIFOCONTROL1, MAX86150_SLOT2_MASK, device << 4); // FD1
+		bitMask(MAX86150_FIFOCONTROL1, MAX86150_SLOT2_MASK, device << 4); // FD2
 		break;
 	case (3):
-		bitMask(MAX86150_FIFOCONTROL2, MAX86150_SLOT3_MASK, device); // FD4
+		bitMask(MAX86150_FIFOCONTROL2, MAX86150_SLOT3_MASK, device); // FD3
 		break;
 	case (4):
-		bitMask(MAX86150_FIFOCONTROL2, MAX86150_SLOT4_MASK, device << 4); //FD3
+		bitMask(MAX86150_FIFOCONTROL2, MAX86150_SLOT4_MASK, device << 4); //FD4
 		break;
 	default:
 		//Shouldn't be here!
@@ -215,13 +254,26 @@ void MAX86150::disableSlots(void)
 	writeRegister8(_i2caddr, MAX86150_FIFOCONTROL2, 0);
 }
 
+// options: 0 disable, not 0 enable
+void MAX86150::setALCFDMStatus(uint8_t status)
+{
+	uint8_t value;
+	value = (status)?(MAX86150_ALC_FDM_DIS_ENABLE):(MAX86150_ALC_FDM_DIS_DISABLE);
+
+	bitMask(MAX86150_PPGCONFIG2, MAX86150_ALC_FDM_DIS_MASK, value);
+}
+
 //
 // FIFO Configuration
 //
 
-void MAX86150::setFIFOAverage(uint8_t numberOfSamples)
+// FIFO Sample Averaging options
+// 
+
+// options: MAX86150_SAMPLEAVE_1/2/4/8/16/32
+void MAX86150::setSampleAveraging(uint8_t samples)
 {
-	bitMask(MAX86150_FIFOCONFIG, MAX86150_SAMPLEAVE_MASK, numberOfSamples);
+	bitMask(MAX86150_PPGCONFIG2, MAX86150_SAMPLEAVE_MASK, samples);
 }
 
 //Resets all points to start in a known state
@@ -254,20 +306,18 @@ void MAX86150::setFIFOAlmostFull(uint8_t numberOfSamples)
 //Read the FIFO Write Pointer
 uint8_t MAX86150::getWritePointer(void)
 {
+	// Serial.println('Writepointer:'+ readRegister8(_i2caddr, MAX86150_FIFOWRITEPTR)); // debug
 	return (readRegister8(_i2caddr, MAX86150_FIFOWRITEPTR));
 }
 
 //Read the FIFO Read Pointer
 uint8_t MAX86150::getReadPointer(void)
 {
+	// Serial.println('Readpointer:'+ readRegister8(_i2caddr, MAX86150_FIFOREADPTR)); // debug
 	return (readRegister8(_i2caddr, MAX86150_FIFOREADPTR));
 }
 
-// Set the PROX_INT_THRESHold
-void MAX86150::setPROXINTTHRESH(uint8_t val)
-{
-	writeRegister8(_i2caddr, MAX86150_PROXINTTHRESH, val);
-}
+
 
 //
 // Device ID and Revision
@@ -285,30 +335,32 @@ uint8_t MAX86150::readPartID()
 // Sample rate = 50
 //Use the default setup if you are just getting started with the MAX86150 sensor
 void MAX86150::setup(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange)
-{
-	activeDevices = 3;
-	// TODO:Should be 2
-	writeRegister8(_i2caddr, MAX86150_SYSCONTROL, 0x01); // reset
-	delay(100);
+{ 
+	activeDevices = 3; // IR, RED and ECG
+
+
+	softReset();
+	// writeRegister8(_i2caddr, MAX86150_SYSCONTROL, 0x01); // reset
+	// delay(100);
 	writeRegister8(_i2caddr, MAX86150_FIFOCONFIG, 0x7F); // clear FIFO interrupt
 
 	//FIFO Configuration
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	//The chip will average multiple samples of same type together if you wish
 	if (sampleAverage == 1)
-		setFIFOAverage(MAX86150_SAMPLEAVE_1); //No averaging per FIFO record
+		setSampleAveraging(MAX86150_SAMPLEAVE_1); //No averaging per FIFO record
 	else if (sampleAverage == 2)
-		setFIFOAverage(MAX86150_SAMPLEAVE_2);
+		setSampleAveraging(MAX86150_SAMPLEAVE_2);
 	else if (sampleAverage == 4)
-		setFIFOAverage(MAX86150_SAMPLEAVE_4);
+		setSampleAveraging(MAX86150_SAMPLEAVE_4);
 	else if (sampleAverage == 8)
-		setFIFOAverage(MAX86150_SAMPLEAVE_8);
+		setSampleAveraging(MAX86150_SAMPLEAVE_8);
 	else if (sampleAverage == 16)
-		setFIFOAverage(MAX86150_SAMPLEAVE_16);
+		setSampleAveraging(MAX86150_SAMPLEAVE_16);
 	else if (sampleAverage == 32)
-		setFIFOAverage(MAX86150_SAMPLEAVE_32);
+		setSampleAveraging(MAX86150_SAMPLEAVE_32);
 	else
-		setFIFOAverage(MAX86150_SAMPLEAVE_1); // default sample average:1
+		setSampleAveraging(MAX86150_SAMPLEAVE_1); // default sample average:1
 
 	// NOT BEING USED
 	uint16_t FIFOCode = 0x00;
@@ -324,21 +376,6 @@ void MAX86150::setup(byte powerLevel, byte sampleAverage, byte ledMode, int samp
 	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL2,(0b00000000));
 	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL1, (char)(FIFOCode & 0x00FF) );
 	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL2, (char)(FIFOCode >>8) );
-
-	writeRegister8(_i2caddr, MAX86150_PPGCONFIG1, 0b11010001); // FULLSCALE:32768nA SAMPLERATE:100sps PULSEWIDTH:100us
-	//writeRegister8(_i2caddr,MAX86150_PPGCONFIG1,0b11100111);
-
-	writeRegister8(_i2caddr, MAX86150_PPGCONFIG2, 0b00000110); // ALC+FDM:Enable SAMPLEAVERAGE:32
-	writeRegister8(_i2caddr, MAX86150_LED_RANGE, 0x00);		   // LED2_RGE:50mA LED1_RGE:50mA
-
-	writeRegister8(_i2caddr, MAX86150_SYSCONTROL, 0x04); // start FIFO, when shutdown the FIFO_EN will be 0
-
-	writeRegister8(_i2caddr, MAX86150_ECG_CONFIG1, 0b00000011); // ECGSAMPLERATE:200
-	writeRegister8(_i2caddr, MAX86150_ECG_CONFIG3, 0b00001101); // ECG_GAIN:8 IA_GAIN:9.5
-
-	setPulseAmplitudeRed(0xFF); // MSB
-	setPulseAmplitudeIR(0xFF);	// MSB
-
 	//Multi-LED Mode Configuration, Enable the reading of the three LEDs
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	//enableSlot(1, SLOT_RED_LED);
@@ -350,6 +387,34 @@ void MAX86150::setup(byte powerLevel, byte sampleAverage, byte ledMode, int samp
 	//enableSlot(2, SLOT_IR_PILOT);
 	//enableSlot(3, SLOT_GREEN_PILOT);
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	
+	setPPGADCRange(MAX86150_PPGADCRANGE_32768);
+	setPPGSampleRate(MAX86150_PPGSR_100);
+	setPPGPulseWidth(MAX86150_PULSEWIDTH_100);
+	// writeRegister8(_i2caddr, MAX86150_PPGCONFIG1, 0b11010001); // FULLSCALE:32768nA SAMPLERATE:100sps PULSEWIDTH:100us
+	//writeRegister8(_i2caddr,MAX86150_PPGCONFIG1,0b11100111);
+
+	setALCFDMStatus(1);
+	setSampleAveraging(MAX86150_SAMPLEAVE_32);
+	// writeRegister8(_i2caddr, MAX86150_PPGCONFIG2, 0b00000110); // ALC+FDM:Enable SAMPLEAVERAGE:32
+
+	setLEDRange(1, MAX86150_LED_RGE_51);
+	setLEDRange(2, MAX86150_LED_RGE_51);
+	// writeRegister8(_i2caddr, MAX86150_LED_RANGE, 0x00);		   // LED2_RGE:50mA LED1_RGE:50mA
+
+
+	writeRegister8(_i2caddr, MAX86150_SYSCONTROL, 0x04); // start FIFO, when shutdown the FIFO_EN will be 0
+
+	setECGSampling(MAX86150_ECG_SR_200);
+	// writeRegister8(_i2caddr, MAX86150_ECG_CONFIG1, 0b00000011); // ECGSAMPLERATE:200
+	setECGGain(MAX86150_ECGGAIN_8);
+	setIAGain(MAX86150_IAGAIN_9_5);
+	// writeRegister8(_i2caddr, MAX86150_ECG_CONFIG3, 0b00001101); // ECG_GAIN:8 IA_GAIN:9.5
+
+	setPulseAmplitudeRed(0xFF); // MSB
+	setPulseAmplitudeIR(0xFF);	// MSB
+
+
 
 	clearFIFO(); //Reset the FIFO before we begin checking the sensor
 }
@@ -481,7 +546,7 @@ uint16_t MAX86150::check(void)
 				byte temp[sizeof(uint32_t)]; //Array of 4 bytes that we will convert into long
 				uint32_t tempLong;
 
-				//Burst read three bytes - RED
+				//Burst read three bytes - IR
 				temp[3] = 0;
 				temp[2] = _i2cPort->read();
 				temp[1] = _i2cPort->read();
@@ -492,11 +557,11 @@ uint16_t MAX86150::check(void)
 
 				tempLong &= 0x7FFFF; //Zero out all but 18 bits
 
-				sense.red[sense.head] = tempLong; //Store this reading into the sense array
+				sense.IR[sense.head] = tempLong; //Store this reading into the sense array
 
 				if (activeDevices > 1)
 				{
-					//Burst read three more bytes - IR
+					//Burst read three more bytes - RED
 					temp[3] = 0;
 					temp[2] = _i2cPort->read();
 					temp[1] = _i2cPort->read();
@@ -507,7 +572,7 @@ uint16_t MAX86150::check(void)
 					//Serial.println(tempLong);
 					tempLong &= 0x7FFFF; //Zero out all but 18 bits
 
-					sense.IR[sense.head] = tempLong;
+					sense.red[sense.head] = tempLong;
 				}
 
 				if (activeDevices > 2)
@@ -596,3 +661,8 @@ void MAX86150::writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 	_i2cPort->write(value);
 	_i2cPort->endTransmission();
 }
+
+// void MAX86150::readAllRegister()
+// {
+
+// }

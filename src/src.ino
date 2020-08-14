@@ -29,11 +29,12 @@ MAX86150 max86150Sensor;
 
 int16_t ecgsigned16;
 uint16_t ppgunsigned16;
-
+uint16_t irunsigned16;
 
 void setup()
 {
     debug.begin(115200);
+    delay(5000);
     debug.println("MAX86150 Basic Readings Example");
 
     // Initialize sensor
@@ -52,13 +53,18 @@ void loop()
     {
         ecgsigned16 = (int16_t) (max86150Sensor.getFIFOECG()>>2);
         ppgunsigned16 = (uint16_t) (max86150Sensor.getFIFORed()>>2);
-
+        irunsigned16 = (uint16_t) (max86150Sensor.getFIFOIR()>>2);
         debug.print(millis());
         debug.print('\t');
 
         debug.print(ecgsigned16);
         debug.print('\t');
-        debug.println(ppgunsigned16);
+        debug.print(ppgunsigned16);
+        debug.print('\t');
+        debug.println(irunsigned16);
+
+
+        // debug.println(MAX86150_INTSTAT2);
         delay(100);
     }
 }

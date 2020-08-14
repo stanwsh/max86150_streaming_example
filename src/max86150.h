@@ -68,18 +68,27 @@ public:
 
 	void setPPGADCRange(uint8_t adcRange);
 	void setPPGSampleRate(uint8_t sampleRate);
-	void setPulseWidth(uint8_t pulseWidth);
+	void setPPGPulseWidth(uint8_t pulseWidth);
 
 	void setPulseAmplitudeRed(uint8_t value);
 	void setPulseAmplitudeIR(uint8_t value);
 	void setPulseAmplitudeProximity(uint8_t value);
+	void setLEDRange(uint8_t led, uint8_t range);
 
 	void setProximityThreshold(uint8_t threshMSB);
+	
+	void setALCFDMStatus(uint8_t status);
+	void setECGSampling(uint8_t sampleRate = MAX86150_ECG_SR_200); // set ECG sample rate
+	void setECGGain(uint8_t gain = MAX86150_ECGGAIN_8); // set ECG gain
+	void setIAGain(uint8_t gain = MAX86150_IAGAIN_9_5); // set Instrumentation Amplifier gain
 
 	//Multi-led configuration mode (page 22)
 	void setFIFOSlot(uint8_t slot1 = SLOT_NONE, uint8_t slot2 = SLOT_NONE, uint8_t slot3 = SLOT_NONE, uint8_t slot4 = SLOT_NONE);
 	void enableSlot(uint8_t slotNumber, uint8_t device); //Given slot number, assign a device to slot
 	void disableSlots(void);
+
+	
+		
 
 	// Data Collection
 
@@ -98,7 +107,7 @@ public:
 	void disableDIETEMPRDY(void);
 
 	//FIFO Configuration (page 18)
-	void setFIFOAverage(uint8_t samples);
+	void setSampleAveraging(uint8_t samples);
 	void enableFIFORollover();
 	void disableFIFORollover();
 	void setFIFOAlmostFull(uint8_t samples);
