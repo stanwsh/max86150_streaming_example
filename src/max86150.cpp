@@ -26,7 +26,7 @@ boolean MAX86150::begin(TwoWire &wirePort, uint32_t i2cSpeed, uint8_t i2caddr)
 
 	// Step 1: Initial Communication and Verification
 	// Check that a MAX86150 is connected
-	if (readPartID() != MAX_30105_EXPECTEDPARTID)
+	if (readPartID() != MAX86150_EXPECTEDPARTID)
 	{
 		// Error -- Part ID read from MAX86150 does not match expected part ID.
 		// This may mean there is a physical connectivity problem (broken wire, unpowered, etc).
@@ -35,10 +35,107 @@ boolean MAX86150::begin(TwoWire &wirePort, uint32_t i2cSpeed, uint8_t i2caddr)
 	return true;
 }
 
+
+//Setup the sensor
+//The MAX86150 has many settings. By default we select:
+// Sample Average = 4
+// Mode = MultiLED
+// ADC Range = 16384 (62.5pA per LSB)
+// Sample rate = 50
+//Use the default setup if you are just getting started with the MAX86150 sensor
+void MAX86150::setup(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange)
+{ 
+	activeDevices = 3; // IR, RED and ECG
+
+	softReset();
+	// writeRegister8(_i2caddr, MAX86150_SYSCONTROL, 0x01); // reset
+	// delay(100);
+	writeRegister8(_i2caddr, MAX86150_FIFOCONFIG, 0x7F); // clear FIFO interrupt
+
+	//FIFO Configuration
+	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	//The chip will average multiple samples of same type together if you wish
+
+	// if (sampleAverage == 1)
+	// 	setSampleAveraging(MAX86150_SAMPLEAVE_1); //No averaging per FIFO record
+	// else if (sampleAverage == 2)
+	// 	setSampleAveraging(MAX86150_SAMPLEAVE_2);
+	// else if (sampleAverage == 4)
+	// 	setSampleAveraging(MAX86150_SAMPLEAVE_4);
+	// else if (sampleAverage == 8)
+	// 	setSampleAveraging(MAX86150_SAMPLEAVE_8);
+	// else if (sampleAverage == 16)
+	// 	setSampleAveraging(MAX86150_SAMPLEAVE_16);
+	// else if (sampleAverage == 32)
+	// 	setSampleAveraging(MAX86150_SAMPLEAVE_32);
+	// else
+	// 	setSampleAveraging(MAX86150_SAMPLEAVE_1); // default sample average:1
+
+	// NOT BEING USED
+	// uint16_t FIFOCode = 0x00;
+	// FIFOCode = FIFOCode << 4 | 0x0009; // : FIFOCode;  //insert ECG front of ETI in FIFO
+	// FIFOCode = FIFOCode << 8 | 0x0021; //) : FIFOCode; //insert Red(2) and IR (1) in front of ECG in FIFO
+
+	//FIFO Control 1 = FD2|FD1, FIFO Control 2 = FD4|FD3
+
+	setFIFOSlot(SLOT_LED1, SLOT_LED2, SLOT_ECG);
+	// writeRegister8(_i2caddr, MAX86150_FIFOCONTROL1, (0b00100001)); // FD2:FD1 = PPG_LED2:PPG_LED1
+	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL1,(0b00001001));
+	// writeRegister8(_i2caddr, MAX86150_FIFOCONTROL2, (0b00001001)); // FD4:FD3 = None:ECG
+	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL2,(0b00000000));
+	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL1, (char)(FIFOCode & 0x00FF) );
+	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL2, (char)(FIFOCode >>8) );
+	//Multi-LED Mode Configuration, Enable the reading of the three LEDs
+	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	//enableSlot(1, SLOT_RED_LED);
+	//if (ledMode > 1)
+	//enableSlot(2, SLOT_IR_LED);
+	//if (ledMode > 2)
+	//enableSlot(3, SLOT_ECG);
+	//enableSlot(1, SLOT_RED_PILOT);
+	//enableSlot(2, SLOT_IR_PILOT);
+	//enableSlot(3, SLOT_GREEN_PILOT);
+	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	
+	setPPGADCRange(MAX86150_PPGADCRANGE_32768);
+	setPPGSampleRate(MAX86150_PPGSR_400);
+	setPPGPulseWidth(MAX86150_PULSEWIDTH_100);
+	// writeRegister8(_i2caddr, MAX86150_PPGCONFIG1, 0b11010001); // FULLSCALE:32768nA SAMPLERATE:100sps PULSEWIDTH:100us
+	//writeRegister8(_i2caddr,MAX86150_PPGCONFIG1,0b11100111);
+
+	setALCFDMStatus(1);
+	setSampleAveraging(MAX86150_SAMPLEAVE_1);
+	// writeRegister8(_i2caddr, MAX86150_PPGCONFIG2, 0b00000110); // ALC+FDM:Enable SAMPLEAVERAGE:32
+
+	setLEDRange(1, MAX86150_LED_RGE_51);
+	setLEDRange(2, MAX86150_LED_RGE_51);
+	// writeRegister8(_i2caddr, MAX86150_LED_RANGE, 0x00);		   // LED2_RGE:50mA LED1_RGE:50mA
+
+	startFIFO();
+	writeRegister8(_i2caddr, MAX86150_SYSCONTROL, 0x04); // start FIFO, when shutdown the FIFO_EN will be 0
+
+	setECGSampling(MAX86150_ECG_SR_400);
+	// writeRegister8(_i2caddr, MAX86150_ECG_CONFIG1, 0b00000011); // ECGSAMPLERATE:200
+	setECGGain(MAX86150_ECGGAIN_8);
+	setIAGain(MAX86150_IAGAIN_20);
+	// writeRegister8(_i2caddr, MAX86150_ECG_CONFIG3, 0b00001101); // ECG_GAIN:8 IA_GAIN:9.5
+
+	setPulseAmplitudeRed(0x32); // 
+	setPulseAmplitudeIR(0x32);	// 
+
+
+
+	clearFIFO(); //Reset the FIFO before we begin checking the sensor
+}
+
+
+
+
 //
 // Configuration
 //
 
+// BELOWS ARE NOT BEING USED.
 //Begin Interrupt configuration
 uint8_t MAX86150::getINT1(void)
 {
@@ -86,6 +183,12 @@ void MAX86150::disablePROXINT(void)
 }
 //End Interrupt configuration
 
+
+void MAX86150::startFIFO(void)
+{
+	writeRegister8(_i2caddr, MAX86150_SYSCONTROL, 0x04);
+}
+
 // a safe way of soft reset
 void MAX86150::softReset(void)
 {
@@ -119,6 +222,7 @@ void MAX86150::wakeUp(void)
 	bitMask(MAX86150_SYSCONTROL, MAX86150_SHUTDOWN_MASK, MAX86150_WAKEUP);
 }
 
+// TODO:???
 void MAX86150::setLEDMode(uint8_t mode)
 {
 	// Set which LEDs are used for sampling -- Red only, RED+IR only, or custom.
@@ -327,97 +431,8 @@ uint8_t MAX86150::readPartID()
 	return readRegister8(_i2caddr, MAX86150_PARTID);
 }
 
-//Setup the sensor
-//The MAX86150 has many settings. By default we select:
-// Sample Average = 4
-// Mode = MultiLED
-// ADC Range = 16384 (62.5pA per LSB)
-// Sample rate = 50
-//Use the default setup if you are just getting started with the MAX86150 sensor
-void MAX86150::setup(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange)
-{ 
-	activeDevices = 3; // IR, RED and ECG
 
 
-	softReset();
-	// writeRegister8(_i2caddr, MAX86150_SYSCONTROL, 0x01); // reset
-	// delay(100);
-	writeRegister8(_i2caddr, MAX86150_FIFOCONFIG, 0x7F); // clear FIFO interrupt
-
-	//FIFO Configuration
-	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	//The chip will average multiple samples of same type together if you wish
-	if (sampleAverage == 1)
-		setSampleAveraging(MAX86150_SAMPLEAVE_1); //No averaging per FIFO record
-	else if (sampleAverage == 2)
-		setSampleAveraging(MAX86150_SAMPLEAVE_2);
-	else if (sampleAverage == 4)
-		setSampleAveraging(MAX86150_SAMPLEAVE_4);
-	else if (sampleAverage == 8)
-		setSampleAveraging(MAX86150_SAMPLEAVE_8);
-	else if (sampleAverage == 16)
-		setSampleAveraging(MAX86150_SAMPLEAVE_16);
-	else if (sampleAverage == 32)
-		setSampleAveraging(MAX86150_SAMPLEAVE_32);
-	else
-		setSampleAveraging(MAX86150_SAMPLEAVE_1); // default sample average:1
-
-	// NOT BEING USED
-	uint16_t FIFOCode = 0x00;
-	FIFOCode = FIFOCode << 4 | 0x0009; // : FIFOCode;  //insert ECG front of ETI in FIFO
-	FIFOCode = FIFOCode << 8 | 0x0021; //) : FIFOCode; //insert Red(2) and IR (1) in front of ECG in FIFO
-
-	//FIFO Control 1 = FD2|FD1, FIFO Control 2 = FD4|FD3
-
-	setFIFOSlot(SLOT_LED1, SLOT_LED2, SLOT_ECG);
-	// writeRegister8(_i2caddr, MAX86150_FIFOCONTROL1, (0b00100001)); // FD2:FD1 = PPG_LED2:PPG_LED1
-	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL1,(0b00001001));
-	// writeRegister8(_i2caddr, MAX86150_FIFOCONTROL2, (0b00001001)); // FD4:FD3 = None:ECG
-	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL2,(0b00000000));
-	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL1, (char)(FIFOCode & 0x00FF) );
-	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL2, (char)(FIFOCode >>8) );
-	//Multi-LED Mode Configuration, Enable the reading of the three LEDs
-	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	//enableSlot(1, SLOT_RED_LED);
-	//if (ledMode > 1)
-	//enableSlot(2, SLOT_IR_LED);
-	//if (ledMode > 2)
-	//enableSlot(3, SLOT_ECG);
-	//enableSlot(1, SLOT_RED_PILOT);
-	//enableSlot(2, SLOT_IR_PILOT);
-	//enableSlot(3, SLOT_GREEN_PILOT);
-	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	
-	setPPGADCRange(MAX86150_PPGADCRANGE_32768);
-	setPPGSampleRate(MAX86150_PPGSR_100);
-	setPPGPulseWidth(MAX86150_PULSEWIDTH_100);
-	// writeRegister8(_i2caddr, MAX86150_PPGCONFIG1, 0b11010001); // FULLSCALE:32768nA SAMPLERATE:100sps PULSEWIDTH:100us
-	//writeRegister8(_i2caddr,MAX86150_PPGCONFIG1,0b11100111);
-
-	setALCFDMStatus(1);
-	setSampleAveraging(MAX86150_SAMPLEAVE_32);
-	// writeRegister8(_i2caddr, MAX86150_PPGCONFIG2, 0b00000110); // ALC+FDM:Enable SAMPLEAVERAGE:32
-
-	setLEDRange(1, MAX86150_LED_RGE_51);
-	setLEDRange(2, MAX86150_LED_RGE_51);
-	// writeRegister8(_i2caddr, MAX86150_LED_RANGE, 0x00);		   // LED2_RGE:50mA LED1_RGE:50mA
-
-
-	writeRegister8(_i2caddr, MAX86150_SYSCONTROL, 0x04); // start FIFO, when shutdown the FIFO_EN will be 0
-
-	setECGSampling(MAX86150_ECG_SR_200);
-	// writeRegister8(_i2caddr, MAX86150_ECG_CONFIG1, 0b00000011); // ECGSAMPLERATE:200
-	setECGGain(MAX86150_ECGGAIN_8);
-	setIAGain(MAX86150_IAGAIN_9_5);
-	// writeRegister8(_i2caddr, MAX86150_ECG_CONFIG3, 0b00001101); // ECG_GAIN:8 IA_GAIN:9.5
-
-	setPulseAmplitudeRed(0xFF); // MSB
-	setPulseAmplitudeIR(0xFF);	// MSB
-
-
-
-	clearFIFO(); //Reset the FIFO before we begin checking the sensor
-}
 
 //Tell caller how many samples are available
 uint8_t MAX86150::available(void)
@@ -661,8 +676,3 @@ void MAX86150::writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 	_i2cPort->write(value);
 	_i2cPort->endTransmission();
 }
-
-// void MAX86150::readAllRegister()
-// {
-
-// }

@@ -30,6 +30,9 @@ MAX86150 max86150Sensor;
 int16_t ecgsigned16;
 uint16_t ppgunsigned16;
 uint16_t irunsigned16;
+uint16_t counts = 0;
+
+void readregister(void);
 
 void setup()
 {
@@ -45,6 +48,7 @@ void setup()
     }
 
     max86150Sensor.setup(); //Configure sensor
+    readregister();
 }
 
 void loop()
@@ -54,8 +58,8 @@ void loop()
         ecgsigned16 = (int16_t) (max86150Sensor.getFIFOECG()>>2);
         ppgunsigned16 = (uint16_t) (max86150Sensor.getFIFORed()>>2);
         irunsigned16 = (uint16_t) (max86150Sensor.getFIFOIR()>>2);
-        debug.print(millis());
-        debug.print('\t');
+//        debug.print(millis());
+//        debug.print('\t');
 
         debug.print(ecgsigned16);
         debug.print('\t');
@@ -65,6 +69,25 @@ void loop()
 
 
         // debug.println(MAX86150_INTSTAT2);
-        delay(100);
+//        delay(100);
     }
+//    if (!(counts%10000))
+//    {
+//        readregister();
+//    }
+//    counts++;
+}
+
+void readregister(void)
+{
+    
+    uint8_t reg[22] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x14, 0x15, 0x3C, 0x3E, 0xFF};
+    for(int i = 0;i<22;i++)
+    {
+        char _str[50];
+        sprintf(_str, "%02x\t", max86150Sensor.readRegister8(0x5E, reg[i]));
+        debug.print(_str);
+    }
+    debug.println("end.");
+	
 }

@@ -104,9 +104,9 @@ static const uint8_t MAX86150_A_FULL_MASK = (byte)~0b00001111; // FIFO almost fu
 static const uint8_t SLOT_NONE = 0x00;
 static const uint8_t SLOT_LED1 = 0x01;
 static const uint8_t SLOT_LED2 = 0x02;
-static const uint8_t SLOT_LED1_PILOT = 0x09;
-static const uint8_t SLOT_LED2_PILOT = 0x0A;
-static const uint8_t SLOT_ECG = 0x0D;
+static const uint8_t SLOT_LED1_PILOT = 0x05;
+static const uint8_t SLOT_LED2_PILOT = 0x06;
+static const uint8_t SLOT_ECG = 0x09;
 // FIFO Data Control Register 1 (0x09)
 
 // FIFO Data Control Register 2 (0x0A)
@@ -231,4 +231,4 @@ static const uint8_t MAX86150_IAGAIN_20 = 0x02;
 static const uint8_t MAX86150_IAGAIN_50 = 0x03;
 
 
-static const uint8_t MAX_30105_EXPECTEDPARTID = 0x1E;
+static const uint8_t MAX86150_EXPECTEDPARTID = 0x1E;

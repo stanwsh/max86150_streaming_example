@@ -60,6 +60,7 @@ public:
 	bool safeCheck(uint8_t maxTimeToCheck); //Given a max amount of time, check for new data
 
 	// Configuration
+	void startFIFO(void);
 	void softReset();
 	void shutDown();	// sleep
 	void wakeUp();
@@ -128,8 +129,8 @@ public:
 	void setPROXINTTHRESH(uint8_t val);
 
 	// Die Temperature
-	float readTemperature();
-	float readTemperatureF();
+	// float readTemperature();
+	// float readTemperatureF();
 
 	// Detecting ID/Revision
 	uint8_t getRevisionID();
