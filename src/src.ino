@@ -60,7 +60,7 @@ delay (200);
 
 MAX86150 max86150Sensor;
 
-#define debug Serial //Uncomment this line if you're using an Uno or ESP
+// #define debug Serial //Uncomment this line if you're using an Uno or ESP
 //#define debug SerialUSB //Uncomment this line if you're using a SAMD21
 
 int16_t ecgsigned16;
@@ -68,8 +68,7 @@ uint16_t ppgunsigned16;
 uint16_t irunsigned16;
 uint16_t counts = 0;
 
-// BLEService batteryService("1101");
-// BLEUnsignedCharCharacteristic batteryLevelChar("2A19", BLERead | BLENotify);
+
 
 void readregister(void);
 
@@ -78,7 +77,7 @@ void setup()
 	Serial.begin(115200);
 	delay(5000);
 	Serial.println("MAX86150 Basic Readings Example");
-	while (!Serial && (millis() < 30000))
+	while (!Serial && (millis() < 5000))
 		; // avoiding unnecessary serial monitor opening.
 	// Initialize sensor
 	if (max86150Sensor.begin(Wire, I2C_SPEED_FAST) == false)

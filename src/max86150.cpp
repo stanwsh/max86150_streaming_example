@@ -78,7 +78,7 @@ void MAX86150::setup(byte powerLevel, byte sampleAverage, byte ledMode, int samp
 
 	//FIFO Control 1 = FD2|FD1, FIFO Control 2 = FD4|FD3
 
-	setFIFOSlot(SLOT_LED1, SLOT_LED2, SLOT_ECG);
+	setFIFOSlot(SLOT_LED1, SLOT_LED1_PILOT, SLOT_ECG);
 	// writeRegister8(_i2caddr, MAX86150_FIFOCONTROL1, (0b00100001)); // FD2:FD1 = PPG_LED2:PPG_LED1
 	//writeRegister8(_i2caddr,MAX86150_FIFOCONTROL1,(0b00001001));
 	// writeRegister8(_i2caddr, MAX86150_FIFOCONTROL2, (0b00001001)); // FD4:FD3 = None:ECG
@@ -122,7 +122,7 @@ void MAX86150::setup(byte powerLevel, byte sampleAverage, byte ledMode, int samp
 
 	setPulseAmplitudeRed(0x32); // 
 	setPulseAmplitudeIR(0x32);	// 
-
+	setPulseAmplitudeProximity(0x32);
 
 
 	clearFIFO(); //Reset the FIFO before we begin checking the sensor
